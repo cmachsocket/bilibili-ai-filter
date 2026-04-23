@@ -1,0 +1,12 @@
+{
+  "name": "bilibili-ai-filter",
+  "version": "1.0.0",
+  "description": "B站视频AI筛选器 - 读取视频标题交给AI分析决定是否重定向",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}
