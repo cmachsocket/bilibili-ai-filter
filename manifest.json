@@ -13,7 +13,8 @@
     "https://api.minimax.chat/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "scripts": ["build-env.js", "background.js"]
   },
   "content_scripts": [
     {

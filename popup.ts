@@ -1,7 +1,6 @@
 // popup.ts - 处理popup界面的交互
 
 interface StorageData {
-  apiKey?: string;
   redirectUrl?: string;
   records?: RecordData[];
 }
@@ -23,10 +22,7 @@ const recordsContainer = document.getElementById('recordsContainer') as HTMLDivE
 const recordsList = document.getElementById('recordsList') as HTMLDivElement;
 
 async function loadConfig(): Promise<void> {
-  const result = await browser.storage.local.get(['apiKey', 'redirectUrl'] as (keyof StorageData)[]);
-  if (result.apiKey) {
-    apiKeyInput.value = result.apiKey;
-  }
+  const result = await browser.storage.local.get(['redirectUrl'] as (keyof StorageData)[]);
   if (result.redirectUrl) {
     redirectUrlInput.value = result.redirectUrl;
   }
@@ -45,16 +41,13 @@ saveBtn.addEventListener('click', async () => {
   const apiKey = apiKeyInput.value.trim();
   const redirectUrl = redirectUrlInput.value.trim();
 
-  if (!apiKey) {
-    showStatus('请输入API Key', true);
-    return;
-  }
-
-  await browser.storage.local.set({ apiKey, redirectUrl });
+  // 仅持久化非敏感配置，API Key 只保存在 background 内存中。
+  await browser.storage.local.set({ redirectUrl });
+  await browser.storage.local.remove('apiKey');
 
   browser.runtime.sendMessage({
     type: 'UPDATE_CONFIG',
-    apiKey,
+    ...(apiKey ? { apiKey } : {}),
     redirectUrl
   });
 
@@ -64,7 +57,7 @@ saveBtn.addEventListener('click', async () => {
 showRecordsBtn.addEventListener('click', async () => {
   if (recordsContainer.style.display === 'none') {
     const result = await browser.storage.local.get('records' as keyof StorageData);
-    const records = result.records || [];
+    const records: RecordData[] = (result.records as RecordData[] | undefined) || [];
 
     if (records.length === 0) {
       recordsList.innerHTML = '<div style="color:#666;text-align:center;padding:12px;">暂无记录</div>';
@@ -102,7 +95,7 @@ function escapeHtml(text: string): string {
 function formatTime(timestamp: number): string {
   const d = new Date(timestamp);
   const now = new Date();
-  const diff = now - d;
+  const diff = now.getTime() - d.getTime();
 
   if (diff < 60000) return '刚刚';
   if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
